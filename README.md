@@ -21,3 +21,7 @@ options:
 ```sh
 docker run -v ~/Downloads:/video extractor /video/recorder_20250822_014827.mcap video/UDPStream0/stream --output /video
 ```
+
+```sh
+uv run main.py ~/Downloads/recorder_20250822_014827.mcap
+```
