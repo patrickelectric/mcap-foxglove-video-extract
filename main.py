@@ -64,7 +64,7 @@ def list_video_messages(mcap_file):
     for topic in sorted(video_topics):
         print(f"- {topic} ({get_topic_duration(mcap_file, topic)}s)")
 
-def extract_video(mcap_file, topic):
+def extract_video(mcap_file, topic, output_dir):
     print(f"Extracting video from topic {topic} in {mcap_file}")
 
     import gi
@@ -74,7 +74,7 @@ def extract_video(mcap_file, topic):
     Gst.init(None)
 
     safe_topic = topic.replace("/", "_")
-    output_filename = f"{safe_topic}.mp4"
+    output_filename = f"{output_dir}/{safe_topic}.mp4"
     print(f"Saving video to {output_filename}")
 
     # Updated pipeline: we still use appsrc with caps
@@ -163,6 +163,7 @@ def main():
     parser = argparse.ArgumentParser(description="List topics containing foxglove.CompressedVideo messages in an MCAP file or extract a specific video topic")
     parser.add_argument("mcap_file", help="Path to MCAP file")
     parser.add_argument("topic", nargs="?", help="Topic name to extract video from, use 'all' to extract all topics")
+    parser.add_argument("--output", help="Output directory", default=".")
     args = parser.parse_args()
 
     if not args.topic:
@@ -172,10 +173,10 @@ def main():
     if args.topic == "all":
         video_topics = get_video_topics(args.mcap_file)
         for topic in video_topics:
-            extract_video(args.mcap_file, topic)
+            extract_video(args.mcap_file, topic, args.output)
         return
 
-    extract_video(args.mcap_file, args.topic)
+    extract_video(args.mcap_file, args.topic, args.output)
 
 
 if __name__ == "__main__":
