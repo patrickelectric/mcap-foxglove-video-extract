@@ -77,7 +77,6 @@ def extract_video(mcap_file, topic, output_dir):
     output_filename = f"{output_dir}/{safe_topic}.mp4"
     print(f"Saving video to {output_filename}")
 
-    # Updated pipeline: we still use appsrc with caps
     pipeline = Gst.parse_launch(
         f"appsrc name=src do-timestamp=true "
         f"caps=video/x-h264,stream-format=byte-stream,framerate=30/1 ! "
@@ -88,9 +87,8 @@ def extract_video(mcap_file, topic, output_dir):
 
     src = pipeline.get_by_name("src")
 
-    # 🔧 Configure appsrc to handle timing
-    src.set_property("do-timestamp", True)          # Auto-timestamp if we don't set
-    src.set_property("format", Gst.Format.TIME)     # Expect time-based input
+    src.set_property("do-timestamp", True)
+    src.set_property("format", Gst.Format.TIME)
 
     ret = pipeline.set_state(Gst.State.PLAYING)
     if ret == Gst.StateChangeReturn.FAILURE:
@@ -113,8 +111,7 @@ def extract_video(mcap_file, topic, output_dir):
                 if schema.name == MESSAGE_SCHEMA_NAME and channel.topic == topic:
                     decoded = decode_cdr(CompressedVideo, message.data)
 
-                    # Use message.publish_time (in nanoseconds) if available
-                    current_time = message.publish_time  # Usually in nanoseconds
+                    current_time = message.publish_time
 
                     buf = Gst.Buffer.new_wrapped(decoded.data)
 
@@ -126,7 +123,7 @@ def extract_video(mcap_file, topic, output_dir):
                         # First frame: assume 30 FPS as fallback
                         buf.duration = Gst.SECOND // 30
 
-                    # Set PTS: cumulative or use absolute time
+                    # Presenting and decoding timestamps
                     buf.pts = current_time
                     buf.dts = current_time
 
@@ -138,7 +135,6 @@ def extract_video(mcap_file, topic, output_dir):
                     prev_publish_time = current_time
                     frame_count += 1
 
-            # End of stream
             src.emit("end-of-stream")
 
             # Wait for EOS
